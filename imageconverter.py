@@ -37,6 +37,40 @@ def compress (pil_image):
     
     return resized_image
 
+
+# Driver Method
+def process_image (image_file, percentage, result_path):
+    # Creates results directory if it doesn't exist
+    file_path = "./%s/" % result_path
+    directory = os.path.dirname(file_path)
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except Exception as e:
+        print("Unable to create results directory. %s" % str(e))
+        exit()
+
+    # Opening Image
+    try:
+      pil_image = Image.open(image_file)
+    except Exception as e:
+      print("Error opening file. %s", str(e))
+      return 
+    image_file_name = os.path.splitext(os.path.basename(image_file))[0]
+    results_image_name = "%s/%s" % (result_path, image_file_name)
+
+    # Image Modifications
+    pil_image = convert_24_10(pil_image)
+    # pil_image.save(results_image_name + '_convert_%f.png' % percentage, 'PNG')
+
+    pil_image = reduce_p(pil_image, percentage)
+    # pil_image.save(results_image_name + '_reduce_%f.png' % percentage, 'PNG')
+
+    pil_image = compress(pil_image)
+    pil_image.save(results_image_name + '_compress_%f.png' % percentage, 'PNG')
+
+    return
+
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
@@ -51,34 +85,9 @@ if __name__ == "__main__":
     if args.resize is None:
         print("Converting percentage is not given. Use `--resize` to declare.")
         exit()
+    if args.results_dir == "results":
+        print("Using default results directory. Use `--results_dir` to customize.")
 
-    # Creates results directory if it doesn't exist
-    file_path = "./%s/" % args.results_dir
-    directory = os.path.dirname(file_path)
-    try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    except Exception as e:
-        print("Unable to create results directory. %s" % str(e))
-        exit()
-
-    # Opening Image
-    try:
-      pil_image = Image.open(args.image_file)
-    except Exception as e:
-      print("Error opening file. %s", str(e))
-      exit()
-    image_file_name = os.path.splitext(os.path.basename(args.image_file))[0]
-    results_image_name = "%s/%s" % (args.results_dir, image_file_name)
-
-    # Image Modifications
-    pil_image = convert_24_10(pil_image)
-    pil_image.save(results_image_name + '_convert_%f.png' % args.resize, 'PNG')
-
-    pil_image = reduce_p(pil_image, args.resize)
-    pil_image.save(results_image_name + '_reduce_%f.png' % args.resize, 'PNG')
-
-    pil_image = compress(pil_image)
-    pil_image.save(results_image_name + '_compress_%f.png' % args.resize, 'PNG')
+    process_image(args.image_file, args.resize, args.results_dir)
 
     exit()
